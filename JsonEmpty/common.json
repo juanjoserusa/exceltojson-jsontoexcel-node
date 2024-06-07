@@ -3,7 +3,7 @@
   "noData": "No se han encontrado resultados con esta búsqueda",
   "tryAgain": "Vuelve a intentarlo aplicando otros filtros",
   "filtersNoData": "Buscando resultados con estos filtros...",
-  "links": {
+  "links": { 
     "summary": "Resumen Global",
     "summaryMobile": "Resumen",
     "invoices": "Facturas",

@@ -1,0 +1,30 @@
+# Ignorar carpetas específicas y su contenido
+JsonEmpty/*
+!JsonEmpty/.gitkeep
+
+ExcelEmpty/*
+!ExcelEmpty/.gitkeep
+
+CompleteExcel/*
+!CompleteExcel/.gitkeep
+
+JsonComplete/es/*
+!JsonComplete/es/.gitkeep
+
+JsonComplete/cat/*
+!JsonComplete/cat/.gitkeep
+
+JsonComplete/pt/*
+!JsonComplete/pt/.gitkeep
+
+JsonComplete/gal/*
+!JsonComplete/gal/.gitkeep
+
+JsonComplete/eus/*
+!JsonComplete/eus/.gitkeep
+
+# Otros archivos y carpetas comunes que podrían ser ignorados
+node_modules/
+dist/
+.env
+.DS_Store
