@@ -8,10 +8,10 @@ const jsonCompleteDir = path.join(__dirname, 'JsonComplete');
 const languages = ['es', 'cat', 'pt', 'gal', 'eus'];
 languages.forEach(lang => {
   const langDir = path.join(jsonCompleteDir, lang);
-  if (!fs.existsSync(langDir)){
+  if (!fs.existsSync(langDir)) {
     fs.mkdirSync(langDir, { recursive: true });
   }
-  console.log(`Directorio ${langDir} esta creado.`);
+  console.log(`Directorio ${langDir} asegurado.`);
 });
 
 function setNestedProperty(obj, key, value) {
@@ -32,7 +32,7 @@ function setNestedProperty(obj, key, value) {
 function excelToJson(inputFile) {
   const workbook = XLSX.readFile(inputFile);
   const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-  const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+  const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: "" });
 
   const translations = jsonData.slice(1);
   let jsonObjects = languages.map(() => ({}));
@@ -40,7 +40,7 @@ function excelToJson(inputFile) {
   translations.forEach(row => {
     const key = row[0];
     row.slice(1).forEach((value, index) => {
-      setNestedProperty(jsonObjects[index], key, value || "");
+      setNestedProperty(jsonObjects[index], key, value);
     });
   });
 
@@ -62,7 +62,7 @@ fs.readdir(excelDir, (err, files) => {
 
       try {
         const jsonObjects = excelToJson(excelFilePath);
-        
+
         jsonObjects.forEach((jsonObj, index) => {
           const lang = languages[index];
           const jsonFilePath = path.join(jsonCompleteDir, lang, `${baseFileName}.json`);

@@ -1,0 +1,50 @@
+{
+  "noResults": "asdas portugues",
+  "noData": "qsd",
+  "tryAgain": "asdas",
+  "filtersNoData": "wqe",
+  "links": {
+    "summary": "asdas",
+    "summaryMobile": "qsd",
+    "invoices": "asdas",
+    "invoicesMobile": "wqe",
+    "consume": "asdas",
+    "consumeMobile": "qsd",
+    "requests": "asdas",
+    "requestsMobile": "wqe"
+  },
+  "todos": "asdas",
+  "selected": "qsd",
+  "modal": {
+    "upload-title": "asdas",
+    "drag": "wqe",
+    "filter": "asdas",
+    "template": "qsd",
+    "select": "asdas",
+    "import": "wqe",
+    "cancel": "asdas"
+  },
+  "notifications": {
+    "unsupported": "qsd",
+    "fileImport": "asdas",
+    "noItemsFound": "wqe",
+    "check": "asdas"
+  },
+  "charts": {
+    "months": {
+      "1": "qsd",
+      "2": "asdas",
+      "3": "wqe",
+      "4": "asdas",
+      "5": "qsd",
+      "6": "asdas",
+      "7": "wqe",
+      "8": "asdas",
+      "9": "qsd",
+      "10": "asdas",
+      "11": "wqe",
+      "12": "asdas"
+    },
+    "cups": "qsd"
+  }
+}
