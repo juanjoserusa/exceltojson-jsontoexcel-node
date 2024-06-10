@@ -1,85 +1,127 @@
 const fs = require('fs');
 const path = require('path');
-const XLSX = require('xlsx');
+const ExcelJS = require('exceljs');
 
-const jsonDir = path.join(__dirname, 'JsonEmpty');
+const jsonBaseDir = path.join(__dirname, 'JsonEmpty');
 const excelDir = path.join(__dirname, 'ExcelEmpty');
 
-if (!fs.existsSync(excelDir)){
+const languages = ['es', 'cat', 'pt', 'gal', 'eus'];
+
+if (!fs.existsSync(excelDir)) {
     fs.mkdirSync(excelDir);
 }
 
-function jsonToExcel(jsonData, outputFile) {
-  const flattenJson = (data, parentKey = '', result = {}) => {
+function flattenJson(data, parentKey = '', result = {}) {
     for (let key in data) {
-      let fullKey = parentKey ? `${parentKey}.${key}` : key;
-      if (typeof data[key] === 'object' && !Array.isArray(data[key])) {
-        flattenJson(data[key], fullKey, result);
-      } else {
-        result[fullKey] = data[key];
-      }
+        let fullKey = parentKey ? `${parentKey}.${key}` : key;
+        if (typeof data[key] === 'object' && !Array.isArray(data[key])) {
+            flattenJson(data[key], fullKey, result);
+        } else {
+            result[fullKey] = data[key];
+        }
     }
     return result;
-  };
-
-  const flatJson = flattenJson(jsonData);
-
-  const sheetData = [["Key", "Español", "Catalán", "Portugués", "Gallego", "Euskera"]];
-  for (let key in flatJson) {
-    sheetData.push([key, flatJson[key], "", "", "", ""]);
-  }
-
-  const workbook = XLSX.utils.book_new();
-  const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
-
-  const range = XLSX.utils.decode_range(worksheet['!ref']);
-  for (let C = range.s.c; C <= range.e.c; ++C) {
-    const cellAddress = XLSX.utils.encode_cell({r: 0, c: C});
-    if (!worksheet[cellAddress]) continue;
-    worksheet[cellAddress].s = {
-      font: { bold: true, sz: 14, color: { rgb: "FFFFFF" } },
-      fill: { fgColor: { rgb: "4F81BD" } }
-    };
-  }
-  for (let R = range.s.r; R <= range.e.r; ++R) {
-    const cellAddress = XLSX.utils.encode_cell({r: R, c: 0});
-    if (!worksheet[cellAddress]) continue;
-    worksheet[cellAddress].s = {
-      font: { bold: true, sz: 14, color: { rgb: "FFFFFF" } },
-      fill: { fgColor: { rgb: "4F81BD" } }
-    };
-  }
-
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Traducciones');
-  XLSX.writeFile(workbook, outputFile);
-  console.log(`Archivo Excel guardado como ${outputFile}`);
 }
 
-fs.readdir(jsonDir, (err, files) => {
-  if (err) {
-    console.error(`No se pudo leer el directorio ${jsonDir}: `, err);
-    return;
-  }
+function mergeJsonData(baseDir) {
+    let mergedData = {};
 
-  files.forEach(file => {
-    if (path.extname(file) === '.json') {
-      const jsonFilePath = path.join(jsonDir, file);
-      const excelFileName = path.basename(file, '.json') + '.xlsx';
-      const excelFilePath = path.join(excelDir, excelFileName);
-
-      fs.readFile(jsonFilePath, 'utf8', (err, data) => {
-        if (err) {
-          console.error(`No se pudo leer el archivo ${jsonFilePath}: `, err);
-          return;
+    languages.forEach(lang => {
+        const langDir = path.join(baseDir, lang);
+        if (fs.existsSync(langDir)) {
+            const files = fs.readdirSync(langDir);
+            files.forEach(file => {
+                if (path.extname(file) === '.json') {
+                    if (!mergedData[file]) {
+                        mergedData[file] = {};
+                    }
+                    const filePath = path.join(langDir, file);
+                    const data = fs.readFileSync(filePath, 'utf8');
+                    try {
+                        const jsonData = JSON.parse(data);
+                        const flatJson = flattenJson(jsonData);
+                        Object.keys(flatJson).forEach(key => {
+                            if (!mergedData[file][key]) {
+                                mergedData[file][key] = {};
+                            }
+                            mergedData[file][key][lang] = flatJson[key];
+                        });
+                    } catch (err) {
+                        console.error(`Error al parsear el archivo JSON ${filePath}: `, err);
+                    }
+                }
+            });
         }
+    });
 
-        try {
-          const jsonData = JSON.parse(data);
-          jsonToExcel(jsonData, excelFilePath);
-        } catch (err) {
-          console.error(`Error al parsear el archivo JSON ${jsonFilePath}: `, err);
-        }
-      });
+    return mergedData;
+}
+
+async function jsonToExcel(jsonData, outputFile) {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Traducciones');
+
+
+    worksheet.addRow(["Key", "Español", "Catalán", "Portugués", "Gallego", "Euskera"]);
+
+
+    for (let key in jsonData) {
+        const row = [key];
+        languages.forEach(lang => {
+            row.push(jsonData[key][lang] || "");
+        });
+        worksheet.addRow(row);
     }
-  });
+
+
+    worksheet.getRow(1).height = 28.35; 
+
+
+    worksheet.getRow(1).font = { bold: true, size: 14, color: { argb: 'FFFFFFFF' }, name: 'Calibri' };
+    worksheet.getRow(1).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF003366' } 
+    };
+
+
+    for (let i = 2; i <= worksheet.rowCount; i++) {
+        const cell = worksheet.getRow(i).getCell(1);
+        cell.font = { bold: true, size: 12, color: { argb: 'FFFFFFFF' }, name: 'Calibri' };
+        cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FF003366' } 
+        };
+    }
+
+
+    worksheet.columns.forEach(column => {
+        column.width = 37.80; 
+    });
+
+
+    for (let rowIndex = 2; rowIndex <= worksheet.rowCount; rowIndex++) {
+        const row = worksheet.getRow(rowIndex);
+        for (let colIndex = 2; colIndex <= languages.length + 1; colIndex++) {
+            const cell = row.getCell(colIndex);
+            if (cell.value) {
+                cell.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FFC6EFCE' } 
+                };
+            }
+        }
+    }
+
+    await workbook.xlsx.writeFile(outputFile);
+    console.log(`Archivo Excel guardado como ${outputFile}`);
+}
+
+const mergedData = mergeJsonData(jsonBaseDir);
+
+Object.keys(mergedData).forEach(fileName => {
+    const excelFilePath = path.join(excelDir, `${path.basename(fileName, '.json')}.xlsx`);
+    jsonToExcel(mergedData[fileName], excelFilePath);
 });
